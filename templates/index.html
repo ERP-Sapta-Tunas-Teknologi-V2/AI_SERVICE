@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+
+<title>Audio to MoM</title>
+
+<form action="/audio-to-mom" method="post" enctype="multipart/form-data">
+    <label for="audio">Upload audio</label>
+    <input type="file" name="audio" id="audio">
+
+    <input type="submit" value="Submit">
+</form>
+
+{% for message in get_flashed_messages() %}
+    <div class="flash">{{ message }}</div>
+{% endfor %}
+
+<h3>Transcript</h3>
+{% if transcript %}
+    <p>{{ transcript }}</p>
+{% endif %}
+
+<h3>MoM</h3>
+{% if minutes %}
+    {% for key, value in minutes.items() %}
+        <p>{{ key }}:</p>
+        <p style="white-space: pre-wrap;">{{ value }}</p>
+    {% endfor %}
+{% endif %}
