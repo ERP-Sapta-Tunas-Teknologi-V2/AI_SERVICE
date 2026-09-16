@@ -7,7 +7,6 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    app.config["SECRET_KEY"] = "dev"
     app.register_blueprint(mom_bp)
     return app
 

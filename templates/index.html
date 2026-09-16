@@ -2,26 +2,83 @@
 
 <title>Audio to MoM</title>
 
-<form action="/audio-to-mom" method="post" enctype="multipart/form-data">
+<form id="form">
     <label for="audio">Upload audio</label>
-    <input type="file" name="audio" id="audio">
+    <input type="file" name="audio" id="audio" required>
 
-    <input type="submit" value="Submit">
+    <button type="submit">Submit</button>
 </form>
 
-{% for message in get_flashed_messages() %}
-    <div class="flash">{{ message }}</div>
-{% endfor %}
-
 <h3>Transcript</h3>
-{% if transcript %}
-    <p>{{ transcript }}</p>
-{% endif %}
+<p id="transcript"></p>
 
 <h3>MoM</h3>
-{% if minutes %}
-    {% for key, value in minutes.items() %}
-        <p>{{ key }}:</p>
-        <p style="white-space: pre-wrap;">{{ value }}</p>
-    {% endfor %}
-{% endif %}
+
+<p>Abstract Summary:</p>
+<p id="abstract_summary"></p>
+
+<p>Key Points:</p>
+<p id="key_points" style="white-space: pre-wrap;"></p>
+
+<p>Action Items:</p>
+<p id="action_items" style="white-space: pre-wrap;"></p>
+
+<script>
+    const form = document.getElementById("form");
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const audio = document.getElementById("audio").files[0];
+        if (!audio) return;
+
+        document.getElementById("transcript").textContent = "";
+        document.getElementById("abstract_summary").textContent = "";
+        document.getElementById("key_points").textContent = "";
+        document.getElementById("action_items").textContent = "";
+
+        const formData = new FormData();
+        formData.append("audio", audio);
+
+        const response = await fetch("/audio-to-mom", {method: "POST", body: formData});
+
+        if (!response.ok) {
+            document.getElementById("transcript").textContent = "Request gagal.";
+            return;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        let buffer = "";
+
+        while (true) {
+            const { value, done } = await reader.read();
+
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+
+            const events = buffer.split("\n\n");
+            buffer = events.pop();
+
+            for (const event of events) {
+                if (!event.startsWith("data: ")) continue;
+
+                const data = JSON.parse(event.slice(6));
+
+                if (data.type === "transcript") {
+                    document.getElementById("transcript").textContent = data.content;
+                }
+
+                if (data.type === "mom") {
+                    document.getElementById(data.key).textContent += data.content;
+                }
+
+                if (data.type === "error") {
+                    alert(data.message);
+                }
+            }
+        }
+    });
+</script>

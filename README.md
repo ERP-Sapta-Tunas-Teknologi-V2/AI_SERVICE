@@ -9,7 +9,6 @@ Saat ini, modul yang tersedia adalah **MoM**. Modul Chatbot akan dikembangkan ke
   * [Tech Stack](#tech-stack)
   * [Prerequisites](#prerequisites)
   * [Installation](#installation)
-  * [Configuration](#configuration)
   * [How to Run](#how-to-run)
   * [Testing](#testing)
     * [Test via index.html](#test-via-indexhtml)
@@ -146,25 +145,6 @@ pip install -U openai-whisper
 ```powershell
 pip install -r mom/requirements.txt
 ```
-
-## Configuration
-
-Buat file `.env` di root repository:
-
-```text
-AI_SERVICE/
-└── .env
-```
-
-Contoh:
-
-```env
-SECRET_KEY=dev
-```
-
-Jangan commit `.env` ke repository.
-
-Gunakan `.env.example` sebagai template konfigurasi.
 
 ## How to Run
 
