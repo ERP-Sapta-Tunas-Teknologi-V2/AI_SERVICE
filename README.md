@@ -10,9 +10,8 @@ Saat ini, modul yang tersedia adalah **MoM**. Modul Chatbot akan dikembangkan ke
   * [Prerequisites](#prerequisites)
   * [Installation](#installation)
   * [How to Run](#how-to-run)
+  * [Deployment](#deployment)
   * [Testing](#testing)
-    * [Test via index.html](#test-via-indexhtml)
-    * [Test API CRM](#test-api-crm)
 
 # Project Structure
 
@@ -190,6 +189,168 @@ Jika berhasil, Flask akan berjalan di:
 
 ```text
 http://127.0.0.1:5000
+```
+
+## Deployment
+
+Panduan berikut untuk deploy AI Service ke server **Ubuntu** menggunakan Gunicorn + Nginx + systemd.
+
+### 1. Update sistem & instal dependency dasar
+
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y python3 python3-venv python3-pip git nginx
+```
+
+### 2. Instal NVIDIA Driver & CUDA (jika menggunakan GPU)
+
+Pastikan driver NVIDIA dan CUDA toolkit sudah terinstall sesuai kebutuhan PyTorch (CUDA 12.6).
+
+```bash
+nvidia-smi
+```
+
+Pastikan perintah di atas menampilkan info GPU. Jika belum, instal driver NVIDIA terlebih dahulu mengikuti dokumentasi resmi NVIDIA untuk Ubuntu.
+
+### 3. Instal Ollama
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+ollama pull qwen2.5:14b
+```
+
+Jalankan Ollama sebagai service (biasanya otomatis terinstall sebagai systemd service):
+
+```bash
+sudo systemctl enable ollama
+sudo systemctl start ollama
+sudo systemctl status ollama
+```
+
+### 4. Clone repository & setup virtual environment
+
+```bash
+cd /opt
+sudo git clone <repo-url> ai_service
+cd ai_service
+sudo python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 5. Instal PyTorch & dependency
+
+```bash
+pip install torch --index-url https://download.pytorch.org/whl/cu126
+pip install nvidia-cublas-cu12 nvidia-cudnn-cu12
+pip install -r mom/requirements.txt
+pip install gunicorn
+```
+
+Verifikasi PyTorch mendeteksi GPU:
+
+```bash
+python -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"
+```
+
+### 6. Jalankan dengan Gunicorn (systemd service)
+
+Buat file service:
+
+```bash
+sudo nano /etc/systemd/system/ai_service.service
+```
+
+Isi dengan:
+
+```ini
+[Unit]
+Description=AI Service (MoM) - Gunicorn
+After=network.target ollama.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/ai_service
+Environment="PATH=/opt/ai_service/.venv/bin"
+ExecStart=/opt/ai_service/.venv/bin/gunicorn --workers 2 --bind 127.0.0.1:8000 --timeout 300 app:app
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+> `--timeout 300` diperlukan karena proses transkripsi & generate MoM bisa memakan waktu lama.
+> Jumlah `--workers` disesuaikan dengan kapasitas GPU/VRAM server (biasanya 1-2 worker untuk beban model AI).
+
+Aktifkan dan jalankan service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable ai_service
+sudo systemctl start ai_service
+sudo systemctl status ai_service
+```
+
+### 7. Setup Nginx sebagai reverse proxy
+
+```bash
+sudo nano /etc/nginx/sites-available/ai_service
+```
+
+Isi dengan:
+
+```nginx
+server {
+    listen 80;
+    server_name your_domain_or_ip;
+
+    client_max_body_size 200M;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
+}
+```
+
+> `client_max_body_size` perlu diperbesar agar upload file audio meeting tidak ditolak Nginx.
+
+Aktifkan konfigurasi:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/ai_service /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+### 8. (Opsional) Setup HTTPS dengan Certbot
+
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d your_domain
+```
+
+### 9. Verifikasi deployment
+
+```bash
+curl -X POST -F "audio=@/path/to/meeting.mp3" http://your_domain_or_ip/api/mom
+```
+
+Jika berhasil, service dapat diakses melalui domain/IP server tanpa perlu menjalankan `flask run` secara manual.
+
+### Update aplikasi (redeploy)
+
+```bash
+cd /opt/ai_service
+sudo git pull
+source .venv/bin/activate
+pip install -r mom/requirements.txt
+sudo systemctl restart ai_service
 ```
 
 ## Testing
