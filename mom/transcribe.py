@@ -1,9 +1,8 @@
-import whisper
+from faster_whisper import WhisperModel
 
-model = whisper.load_model("turbo")
+model = WhisperModel("turbo", device="cuda", compute_type="float16")
 
 def transcribe(filepath):
-    result = model.transcribe(filepath)
-    transcript = result["text"]
-    print(transcript)
-    return transcript
+    segments, _ = model.transcribe(filepath)
+    for segment in segments:
+        yield {"start": segment.start, "end": segment.end, "text": segment.text}

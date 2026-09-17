@@ -54,8 +54,7 @@ Modul MoM menangani:
 ## Tech Stack
 
 * **Flask** — Web framework dan REST API
-* **OpenAI Whisper** — Transkripsi audio (speech-to-text)
-* **Whisper Turbo** — Model untuk transkripsi
+* **Faster Whisper (Turbo)** — Transkripsi audio (speech-to-text)
 * **Ollama** — Local LLM runer
 * **Qwen 2.5 14B** — LLM untuk generate Minutes of Meeting
 
@@ -63,62 +62,13 @@ Modul MoM menangani:
 
 Pastikan aplikasi berikut sudah terinstall:
 * Python
-* FFmpeg
+* PyTorch
+* cuBLAS & cuDNN
 * Ollama
-* Git
 
-### FFmpeg
+### PyTorch
 
-Digunakan oleh Whisper untuk memproses file audio.
-
-Jika menggunakan Windows dan Chocolatey (https://chocolatey.org/), instal dengan:
-
-```powershell
-choco install ffmpeg
-```
-
-### Ollama
-
-Instal Ollama mengikuti dokumentasi resmi [Ollama Quickstart](https://docs.ollama.com/quickstart).
-
-Setelah Ollama terinstal, download model:
-
-```powershell
-ollama pull qwen2.5:14b
-```
-
-Untuk melihat model yang tersedia:
-
-```powershell
-ollama list
-```
-
-## Installation
-
-Clone repository:
-
-```powershell
-git clone <repo-url>
-cd AI_SERVICE
-```
-
-Semua command berikut dijalankan dari folder `AI_SERVICE/`.
-
-### 1. Membuat virtual environment
-
-```powershell
-python -m venv .venv
-```
-
-Aktifkan virtual environment. Jika di PowerShell:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-Jika berhasil, terminal akan menunjukkan `(.venv)`.
-
-### 2. Instal PyTorch
+Instal mengikuti dokumentasi resmi [PyTorch](https://pytorch.org/get-started/locally/).
 
 Untuk GPU NVIDIA dengan CUDA 12.6:
 
@@ -134,13 +84,77 @@ python -c "import torch; print(torch.__version__); print(torch.cuda.is_available
 
 Jika menggunakan GPU dan instalasi berhasil, `torch.cuda.is_available()` seharusnya menghasilkan `True`.
 
-### 3. Instal OpenAI Whisper
+### cuBLAS & cuDNN
+
+Install library NVIDIA melalui pip:
 
 ```powershell
-pip install -U openai-whisper
+pip install nvidia-cublas-cu12 nvidia-cudnn-cu12
 ```
 
-### 4. Instal dependency project lainnya
+Cari file DLL yang terinstall:
+
+```powershell
+Get-ChildItem -Path .\.venv\Lib\site-packages\nvidia -Recurse -Filter "cublas64_12.dll"                           
+Get-ChildItem -Path .\.venv\Lib\site-packages\nvidia -Recurse -Filter "cudnn64_9.dll"
+```
+
+Catat lokasi folder `bin` yang berisi masing-masing DLL.
+
+Kemudian tambahkan folder tersebut ke `PATH` Windows menggunakan PowerShell **Administrator**:
+
+```powershell
+[Environment]::SetEnvironmentVariable(
+    "Path",
+    [Environment]::GetEnvironmentVariable("Path", "Machine") + ";<cublas_bin_path>;<cudnn_bin_path>",
+    "Machine"
+)
+```
+
+Tutup dan buka kembali PowerShell setelah mengubah `PATH`.
+
+### Ollama
+
+Instal mengikuti dokumentasi resmi [Ollama](https://docs.ollama.com/quickstart).
+
+Setelah Ollama terinstal, download model:
+
+```powershell
+ollama pull qwen2.5:14b
+```
+
+Untuk melihat model yang tersedia:
+
+```powershell
+ollama list
+```
+
+## Installation
+
+### 1. Clone repository
+
+```powershell
+git clone <repo-url>
+cd AI_SERVICE
+```
+
+Semua command berikut dijalankan dari folder `AI_SERVICE/`.
+
+### 2. Buat virtual environment
+
+```powershell
+python -m venv .venv
+```
+
+Aktifkan virtual environment. Jika di PowerShell:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+Jika berhasil, terminal akan menunjukkan `(.venv)`.
+
+### 3. Instal dependency project lainnya
 
 ```powershell
 pip install -r mom/requirements.txt

@@ -66,7 +66,7 @@ def create_mom():
         delete_audio(filepath)
 
 def save_audio(audio):
-    upload_folder = os.path.join(current_app.root_path, "temp")
+    upload_folder = os.path.join(current_app.root_path, "temp_audio")
     os.makedirs(upload_folder, exist_ok=True)
 
     filename = secure_filename(audio.filename)

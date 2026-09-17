@@ -9,18 +9,18 @@
     <button type="submit">Submit</button>
 </form>
 
-<h3>Transcript</h3>
+<h2>Transcript</h2>
 <p id="transcript"></p>
 
-<h3>MoM</h3>
+<h2>MoM</h2>
 
-<p>Abstract Summary:</p>
+<h4>Abstract Summary:</h4>
 <p id="abstract_summary"></p>
 
-<p>Key Points:</p>
+<h4>Key Points:</h4>
 <p id="key_points" style="white-space: pre-wrap;"></p>
 
-<p>Action Items:</p>
+<h4>Action Items:</h4>
 <p id="action_items" style="white-space: pre-wrap;"></p>
 
 <script>
@@ -68,7 +68,7 @@
                 const data = JSON.parse(event.slice(6));
 
                 if (data.type === "transcript") {
-                    document.getElementById("transcript").textContent = data.content;
+                    transcript.textContent += (transcript.textContent ? " " : "") + data.content;
                 }
 
                 if (data.type === "mom") {
