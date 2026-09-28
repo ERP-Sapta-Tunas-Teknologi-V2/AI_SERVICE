@@ -13,3 +13,5 @@ def generate_mom(filepath):
     print("Generating MoM...")
     for event in generate_minutes(transcript):
         yield event
+
+    print("Done.")

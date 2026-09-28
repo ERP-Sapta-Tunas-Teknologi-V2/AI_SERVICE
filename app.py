@@ -1,9 +1,11 @@
 import requests
 import time
 from flask import Flask
+from flask_cors import CORS
 from dotenv import load_dotenv
-
 from mom import bp as mom_bp
+
+ALLOWED_ORIGINS = ["http://localhost:5173", "https://2023.smartindo.com"]
 
 load_dotenv()
 
@@ -28,6 +30,7 @@ def create_app():
         time.sleep(5)
 
     app = Flask(__name__)
+    CORS(app, resources={r"/api/*": {"origins": ALLOWED_ORIGINS}})
     app.register_blueprint(mom_bp)
     return app
 

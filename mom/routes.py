@@ -35,7 +35,7 @@ def audio_to_mom():
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
     )
 
-# API untuk CRM Django
+# API untuk CRM
 @bp.route("/api/mom", methods=["POST"])
 def create_mom():
     audio = request.files.get("audio")
@@ -47,17 +47,19 @@ def create_mom():
 
     try:
         events = list(generate_mom(filepath))
-        minutes = {
-            e["key"]: e["content"]
-            for e in events
-            if e["type"] == "mom"
-        }
-        transcript = next(
-            e["content"] for e in events
-            if e["type"] == "transcript"
+
+        minutes = {"abstract_summary": "", "key_points": "", "action_items": ""}
+        for e in events:
+            if e["type"] == "mom":
+                minutes[e["key"]] += e["content"]
+
+        formatted = (
+            f"Abstract Summary:\n{minutes['abstract_summary']}\n\n"
+            f"Action Items:\n{minutes['action_items']}\n\n"
+            f"Key Points:\n{minutes['key_points']}"
         )
 
-        return jsonify({"transcript": transcript, "minutes": minutes})
+        return jsonify({"minutes": formatted})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
