@@ -6,6 +6,17 @@ from werkzeug.utils import secure_filename
 from . import bp
 from .service import generate_mom
 
+def build_context(form):
+    fields = [
+        ("Tanggal", "date"),
+        ("Tipe meeting", "meeting_type"),
+        ("Channel", "channel"),
+        ("Target audience", "audience"),
+        ("Peserta", "participants"),
+    ]
+    lines = [f"- {label}: {form.get(key, '').strip()}" for label, key in fields if form.get(key, "").strip()]
+    return "\n".join(lines) or "-"
+
 @bp.route("/")
 def index():
     return render_template("index.html")
@@ -44,9 +55,10 @@ def create_mom():
         return jsonify({"error": "Audio file is required."}), 400
 
     filepath = save_audio(audio)
+    context = build_context(request.form)
 
     try:
-        events = list(generate_mom(filepath))
+        events = list(generate_mom(filepath, context))
 
         minutes = {"abstract_summary": "", "key_points": "", "action_items": ""}
         for e in events:
