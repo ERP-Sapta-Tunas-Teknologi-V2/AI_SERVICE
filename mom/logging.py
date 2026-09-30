@@ -3,9 +3,10 @@ import uuid
 from datetime import datetime
 from contextvars import ContextVar
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TIME_LOG_FILE = os.path.join(BASE_DIR, "timing.log")
-MOM_LOG_FILE = os.path.join(BASE_DIR, "mom.log")
+LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "log")
+TIME_LOG_FILE = os.path.join(LOG_DIR, "timing.log")
+TRANSCRIPT_LOG_FILE = os.path.join(LOG_DIR, "transcript.log")
+MOM_LOG_FILE = os.path.join(LOG_DIR, "mom.log")
 
 run_id_var = ContextVar("run_id", default="-")
 
@@ -25,6 +26,12 @@ def log_model(max_token, model):
 def log_time(label, seconds):
     with open(TIME_LOG_FILE, "a", encoding="utf-8") as f:
         f.write(f"{seconds:.2f}s | {label} | {datetime.now():%Y-%m-%d %H:%M:%S}\n")
+
+def log_transcript(filename, transcript):
+    os.makedirs(LOG_DIR, exist_ok=True)
+    with open(TRANSCRIPT_LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"===== {datetime.now():%Y-%m-%d %H:%M:%S} | {run_id_var.get()} | {filename} =====\n")
+        f.write(f"{transcript}\n\n")
 
 def log_mom(filename, minutes):
     with open(MOM_LOG_FILE, "a", encoding="utf-8") as f:

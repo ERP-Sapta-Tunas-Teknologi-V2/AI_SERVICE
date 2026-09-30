@@ -1,8 +1,16 @@
 import os
 import time
-from .timing_log import log_time, log_space, log_mom, new_run_id
+from concurrent.futures import ThreadPoolExecutor
+from .logging import log_space, new_run_id, log_time, log_transcript, log_mom
 from .transcribe import transcribe
 from .minutes import generate_minutes
+from .diarize import diarize, label_transcript
+
+def timed_diarize(filepath):
+    start = time.perf_counter()
+    turns = diarize(filepath)
+    log_time(f"diarization | {os.path.basename(filepath)}", time.perf_counter() - start)
+    return turns
 
 def generate_mom(filepath, context="-"):
     new_run_id()
@@ -10,16 +18,22 @@ def generate_mom(filepath, context="-"):
     minutes = {"abstract_summary": "", "key_points": "", "action_items": ""}
 
     try:
-        print("Transcribing...")
-        transcript_parts = []
+        print("Transcribing & diarizing...")
+        segments = []
         start = time.perf_counter()
 
-        for segment in transcribe(filepath):
-            transcript_parts.append(segment["text"].strip())
-            yield {"type": "transcript", "content": segment["text"], "start": segment["start"], "end": segment["end"]}
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            diar_future = pool.submit(timed_diarize, filepath)
 
-        log_time(f"transcription | {os.path.basename(filepath)}", time.perf_counter() - start)
-        transcript = " ".join(transcript_parts)
+            for segment in transcribe(filepath):
+                segments.append(segment)
+                yield {"type": "transcript", "content": segment["text"], "start": segment["start"], "end": segment["end"]}
+
+            log_time(f"transcription | {os.path.basename(filepath)}", time.perf_counter() - start)
+            turns = diar_future.result()  # error di thread akan di-raise di sini
+
+        transcript = label_transcript(segments, turns)
+        log_transcript(os.path.basename(filepath), transcript)
         yield {"type": "transcript_done", "content": transcript}
 
         print("Generating MoM...")
@@ -28,7 +42,6 @@ def generate_mom(filepath, context="-"):
             if event["type"] == "mom":
                 minutes[event["key"]] += event["content"]
             yield event
-        log_time("mom generation total", time.perf_counter() - start)
 
         print("Done.")
 

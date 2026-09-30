@@ -4,7 +4,7 @@ import math
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from transformers import AutoTokenizer
-from .timing_log import log_time, log_model
+from .logging import log_time, log_model
 
 MAX_TOKEN = 5000
 
@@ -58,7 +58,7 @@ Aturan:
 (1) Hanya gunakan informasi yang ada di transkrip, jangan mengarang.
 (2) Transkrip berasal dari speech-to-text sehingga nama/istilah bisa salah.
 (3) Bedakan usulan/permintaan dengan keputusan. Jangan menulis sesuatu sebagai keputusan kecuali ada persetujuan eksplisit.
-(4) Transkrip tidak memiliki label pembicara. Jangan mengaitkan pernyataan, penolakan, atau usulan ke orang, jabatan, atau instansi tertentu kecuali disebut eksplisit di kalimat yang sama. Jika tidak jelas, tulis tanpa subjek.
+(4) Transkrip memiliki label pembicara anonim (misalnya [Speaker A]) hasil diarization otomatis yang bisa keliru. Gunakan label hanya untuk membedakan siapa yang mengatakan apa. JANGAN tulis "Speaker A/B" di output. Kaitkan pernyataan, penolakan, atau usulan ke nama, jabatan, atau pihak tertentu hanya jika disebut eksplisit (misalnya disapa dengan nama, memperkenalkan diri) atau jelas dari <konteks>. Jika tidak jelas, tulis tanpa subjek.
 (5) Abaikan obrolan di luar agenda rapat (sapaan, lokasi, cuaca, candaan, cerita pribadi, perkenalan diri yang tidak relevan dengan topik bisnis).
 (6) Jika ada pihak yang menyatakan tidak bisa/menolak/bukan kewenangannya, JANGAN jadikan itu tindakan atau keputusan; catat sebagai poin pembahasan.
 (7) Jika ada perbedaan pendapat antar pihak, sebutkan perbedaannya.
@@ -66,7 +66,8 @@ Aturan:
 (9) Bedakan penjelasan umum/contoh dari pembicara dari fakta tentang pihak yang sedang rapat. Jangan menjadikan pernyataan umum sebagai fakta tentang peserta.
 (10) <konteks> adalah metadata dari sistem CRM. Gunakan untuk memperbaiki ejaan nama/istilah dan memahami latar rapat. Boleh menyebut nama/peran dari konteks hanya jika isi kalimat jelas menunjuk peran tersebut (contoh: wewenang budget milik peserta dari pihak klien, pengiriman materi oleh pihak penjual). Jangan gunakan kata "Pembicara". Jika tidak jelas, tulis tanpa subjek.
 (11) Penjelasan produk, klaim, dan keunggulan yang disampaikan pihak penjual adalah deskripsi produk, bukan kebutuhan atau kesepakatan pihak klien. Jangan tulis "kedua pihak sepakat" kecuali keduanya menyatakan persetujuan eksplisit.
-(12) Rencana yang belum pasti (opsi waktu yang akan dikirim, demo yang akan diatur) jangan ditulis sebagai "dijadwalkan" atau "disepakati". Jangan menambah urutan atau syarat waktu yang tidak disebut.
+(12) Rencana yang belum pasti (opsi waktu yang akan dikirim, demo yang akan diatur) jangan ditulis sebagai "dijadwalkan" atau "disepakati". Jangan menambah urutan atau syarat waktu yang tidak disebut. Jangan menulis rencana tindak lanjut apa pun yang tidak disebut eksplisit akan dilakukan seseorang.
+(13) Gunakan istilah, nama jabatan, dan nama produk dengan bentuk yang konsisten di seluruh output. Jika transkrip atau <konteks> memakai istilah asing, tulis persis seperti aslinya dan jangan diterjemahkan berbeda-beda.
 """
 
 def abstract_summary_prompt():
@@ -77,7 +78,7 @@ Anda adalah AI yang sangat terampil dalam pemahaman bahasa dan pembuatan ringkas
 
 <transkripsi>{transcript}</transkripsi>
 """ + COMMON_RULES + """
-Format: satu paragraf, maksimal 4 kalimat. Sebutkan kebutuhan klien, pendekatan pihak penjual (dipisahkan dari kebutuhan klien), kewenangan budget, dan langkah lanjut yang belum pasti.
+Format: satu paragraf, maksimal 4 kalimat. Sebutkan kebutuhan klien, pendekatan pihak penjual (dipisahkan dari kebutuhan klien), dan kewenangan budget. Jangan menulis langkah lanjut, jadwal, demo, atau pelibatan pihak lain; itu sudah ada di Action Items.
 """)
 
 def key_points_prompt():
@@ -100,7 +101,7 @@ Anda adalah AI yang ahli dalam menganalisis percakapan dan mengidentifikasi poin
         
 <transkripsi>{transcript}</transkripsi>
 """ + COMMON_RULES + """
-Action item hanya berisi pekerjaan konkret di masa depan yang disebut akan dilakukan seseorang (mengirim dokumen, mengirim ringkasan, mengirim opsi jadwal, menyiapkan demo). Jangan masukkan keinginan atau preferensi (contoh: "ingin melihat produk dulu sebelum melibatkan CIO"), kondisi ("jika biaya melebihi..."), atau keputusan yang bukan tugas.
+Action item hanya berisi pekerjaan konkret di masa depan yang disebut akan dilakukan seseorang (mengirim dokumen, mengirim ringkasan, mengirim opsi jadwal, menyiapkan demo). Jangan masukkan keinginan atau preferensi, kondisi atau keputusan yang bukan tugas.
 Format: setiap baris diawali '- ' dengan pola "[Pelaku] akan [tindakan]". Jika tidak ada tindakan, tulis "- Tidak ada".
 """)
 

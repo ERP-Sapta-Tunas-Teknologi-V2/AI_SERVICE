@@ -67,8 +67,8 @@ def create_mom():
 
         formatted = (
             f"Abstract Summary:\n{minutes['abstract_summary']}\n\n"
-            f"Action Items:\n{minutes['action_items']}\n\n"
-            f"Key Points:\n{minutes['key_points']}"
+            f"Key Points:\n{minutes['key_points']}\n\n"
+            f"Action Items:\n{minutes['action_items']}"
         )
 
         return jsonify({"minutes": formatted})
