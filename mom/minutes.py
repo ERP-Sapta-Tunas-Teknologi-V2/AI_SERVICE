@@ -63,31 +63,16 @@ def chain_stream(prompt, transcript, label="chain_stream", context="-"):
 
 COMMON_RULES = """
 Aturan:
-(1) Hanya gunakan informasi yang ada di transkrip, jangan mengarang.
-(2) Transkrip berasal dari speech-to-text sehingga nama/istilah bisa salah.
-(3) Bedakan usulan/permintaan dengan keputusan. Jangan menulis sesuatu sebagai keputusan kecuali ada persetujuan eksplisit.
-(4) Transkrip memiliki label pembicara anonim (misalnya [Speaker A]) hasil diarization otomatis yang bisa keliru. Gunakan label hanya untuk membedakan siapa yang mengatakan apa. JANGAN tulis "Speaker A/B" di output. Kaitkan pernyataan, penolakan, atau usulan ke nama, jabatan, atau pihak tertentu hanya jika disebut eksplisit (misalnya disapa dengan nama, memperkenalkan diri) atau jelas dari <konteks>. Jika tidak jelas, tulis tanpa subjek.
-(5) Abaikan obrolan di luar agenda rapat (sapaan, lokasi, cuaca, candaan, cerita pribadi, perkenalan diri yang tidak relevan dengan topik bisnis).
-(6) Jika ada pihak yang menyatakan tidak bisa/menolak/bukan kewenangannya, JANGAN jadikan itu tindakan atau keputusan; catat sebagai poin pembahasan.
-(7) Jika ada perbedaan pendapat antar pihak, sebutkan perbedaannya.
-(8) Jangan menambahkan angka, mata uang, atau satuan yang tidak disebut. Salin angka persis seperti diucapkan. Setiap angka uang ditulis dengan peruntukan yang disebut; jangan menyamakan dua angka kecuali transkrip menyatakan hubungannya. Tulis angka dengan digit.
-(9) Bedakan penjelasan umum/contoh dari pembicara dari fakta tentang pihak yang sedang rapat. Jangan menjadikan pernyataan umum sebagai fakta tentang peserta.
-(10) <konteks> adalah metadata dari sistem CRM. Gunakan untuk memperbaiki ejaan nama/istilah dan memahami latar rapat. Boleh menyebut nama/peran dari konteks hanya jika isi kalimat jelas menunjuk peran tersebut (contoh: wewenang budget milik peserta dari pihak klien, pengiriman materi oleh pihak penjual). Jangan gunakan kata "Pembicara". Jika tidak jelas, tulis tanpa subjek.
-(11) Penjelasan produk, klaim, dan keunggulan yang disampaikan pihak penjual adalah deskripsi produk, bukan kebutuhan atau kesepakatan pihak klien. Jangan tulis "kedua pihak sepakat" kecuali keduanya menyatakan persetujuan eksplisit.
-(12) Rencana yang belum pasti (opsi waktu yang akan dikirim, demo yang akan diatur) jangan ditulis sebagai "dijadwalkan" atau "disepakati". Jangan menambah urutan atau syarat waktu yang tidak disebut. Jangan menulis rencana tindak lanjut apa pun yang tidak disebut eksplisit akan dilakukan seseorang.
-(13) Istilah teknis, jargon industri, nama jabatan, nama produk, dan nama skema atau program ditulis persis seperti di transkrip atau <konteks>. Istilah berbahasa Inggris disalin apa adanya, tanpa terjemahan. Gunakan bentuk yang konsisten di seluruh output. Kata umum bahasa Inggris tulis dengan bahasa Indonesia. Nama produk atau layanan yang tercantum di <konteks> ditulis persis dan tidak diterjemahkan.
-(14) Prediksi, angka pasar, dan klaim penghematan dari pihak penjual harus ditulis sebagai pernyataan penjual ("penjual menyatakan/memperkirakan ..."), bukan fakta. Angka contoh/ilustrasi harus disebut sebagai contoh.
-(15) Pertanyaan dari satu pihak bukan bukti bahwa proses itu ada. Jika topik ditanyakan tetapi jawabannya tidak jelas, tulis "belum jelas". Jika topik tidak dibahas sama sekali, jangan menulis apa pun tentang topik itu.
-(16) Kebutuhan, tujuan internal, dan inisiatif perusahaan hanya boleh dikaitkan ke klien jika klien sendiri yang mengatakannya. Jika disebut penjual, tulis sebagai pengamatan penjual, dan jangan tulis klien khawatir tentang hal itu.
-(17) Jangan menulis persetujuan penuh klien ("menyetujui", "sepakat") jika klien hanya menyatakan terbuka atau tertarik.
-(18) Jangan menambahkan klausa negasi atau pembanding ("bukan ...", "tanpa ...", "tidak seperti ...") yang tidak diucapkan di transkrip. Untuk pendanaan, margin, atau harga, tulis hanya apa yang disebut apa adanya.
-(19) Jangan menulis kalimat atau poin tentang anggaran, persetujuan, atau pengambil keputusan klien kecuali topik itu dibahas di transkrip.
-(20) <konteks> hanya untuk latar belakang, ejaan nama, dan peran peserta. Jangan menyimpulkan format atau aktivitas rapat (demo, presentasi, daring/luring) dari <konteks> kecuali benar-benar terjadi di transkrip.
-(21) Pelaku ditulis dengan nama orang. Jika tidak ada nama, tulis "pihak penjual" atau "pihak klien". Pihak yang menjelaskan/menawarkan jasa atau produk adalah penjual; pihak yang menilai penawaran adalah klien.
-(22) Bedakan rencana atau keinginan ("berencana", "ingin") dari hal yang sudah terjadi. Jangan menulis rencana sebagai fakta yang sudah berjalan.
-(23) Penawaran bersyarat bukan action item dan bukan kesepakatan. Dimulainya proyek, onboarding, atau layanan bukan action item kecuali klien menyatakan setuju melanjutkan.
-(24) Jangan mengganti atau menambah istilah dan sifat yang tidak diucapkan. Jangan memakai kata "sebelum" atau "setelah" untuk urutan kejadian kecuali kata itu diucapkan di transkrip. Nama orang hanya boleh dari transkrip atau <konteks>; jika tidak ada, tulis "pihak penjual" atau "pihak klien". Jangan menambah hubungan antar pihak yang tidak diucapkan.
-(25) Jangan membuat dua poin dengan isi yang sama atau tumpang tindih. Gabungkan menjadi satu poin.
+1. Hanya pakai informasi di transkrip, jangan mengarang. Transkrip hasil speech-to-text sehingga ejaan nama/istilah bisa salah; perbaiki dengan <konteks>.
+2. Jangan tulis label "Speaker A/B". Pelaku ditulis dengan nama (dari transkrip atau <konteks>); jika tidak ada, tulis "pihak penjual" (yang menawarkan) atau "pihak klien" (yang menilai). Jangan menambah hubungan antar pihak yang tidak diucapkan.
+3. Abaikan obrolan di luar agenda (sapaan, cuaca, candaan, cerita pribadi).
+4. Usulan bukan keputusan. "Terbuka/tertarik" bukan setuju. Penolakan atau "bukan kewenangan" dicatat sebagai pembahasan, bukan tindakan. Perbedaan pendapat disebut.
+5. Klaim, prediksi, dan angka dari penjual ditulis "penjual menyatakan ...". Kebutuhan/tujuan klien hanya jika klien sendiri yang mengatakannya. Penjelasan umum atau angka contoh bukan fakta tentang peserta; tandai "contoh".
+6. Angka disalin persis dalam digit, sertakan peruntukannya. Jangan menyamakan dua angka, dan jangan menambah mata uang/satuan.
+7. Istilah teknis, nama produk/program, dan istilah Inggris ditulis persis seperti di transkrip atau <konteks>, konsisten, tanpa terjemahan.
+8. Rencana/keinginan bukan kejadian, jadwal, atau kesepakatan. Jangan menambah urutan waktu, kata "sebelum/setelah", atau klausa negasi/pembanding yang tidak diucapkan.
+9. Topik (anggaran, pengambil keputusan, proses persetujuan) hanya ditulis jika dibahas. Jika ditanyakan tapi jawabannya tidak jelas, tulis "belum jelas". <konteks> bukan bukti format rapat (demo, daring/luring).
+10. Jangan membuat poin ganda atau tumpang tindih.
 """
 
 def abstract_summary_prompt():
@@ -100,12 +85,11 @@ COMMON_RULES +
 
 <transkripsi>{transcript}</transkripsi>
 
-Format: satu paragraf, maksimal 4 kalimat.
-Kalimat 1: apa yang ditawarkan penjual (produk/jasa dan tujuannya, tulis "menurut penjual") serta masalah/kebutuhan klien HANYA jika klien sendiri yang menyatakannya.
-Kalimat berikutnya: pertanyaan, syarat, atau keberatan klien beserta jawaban penjual; sertakan kewenangan/anggaran klien jika dibahas.
-Kalimat terakhir wajib diawali "Klien" atau nama klien dan hanya memuat apa yang klien ucapkan tentang keputusan atau langkah berikutnya milik klien sendiri. Jika klien tidak mengucapkan apa pun tentang itu, tulis tepat: "Belum ada keputusan dari klien."
-Hal yang ditanyakan klien tulis sebagai "menanyakan ...".
-Larangan: langkah lanjut, jadwal, atau pertemuan; "kedua pihak sepakat"; penilaian klien terhadap produk yang tidak diucapkan (mis. "berguna", "cocok"); simpulan perbandingan angka buatan sendiri. Angka contoh ditulis sebagai "contoh" beserta pembandingnya. Jika proses persetujuan dijawab samar tulis "Proses persetujuan internal klien belum jelas."; jika tidak dibahas, jangan disebut. Jika klien tidak menyatakan kebutuhan, jangan menulis apa pun tentang kebutuhan klien. Ucapan terima kasih atau apresiasi klien bukan persetujuan; jangan menulis klien menerima, setuju, atau membayar sesuatu kecuali klien sendiri berkata demikian. Jangan menulis kekhawatiran klien kecuali diucapkan; kondisi yang klien sebutkan saat menjawab pertanyaan penjual (mis. usia aset) tulis sebagai "klien menyebut ...". Sertakan angka kunci yang disebut penjual (harga, durasi, payback) jika ada, ditandai "menurut penjual".
+Format:
+- Kalimat 1: yang ditawarkan penjual ("menurut penjual"); kebutuhan klien hanya jika klien yang menyatakan.
+- Berikutnya: pertanyaan/syarat/keberatan klien dan jawaban penjual; kewenangan/anggaran jika dibahas; angka kunci penjual (harga, durasi, payback) ditandai "menurut penjual".
+- Kalimat terakhir diawali "Klien" dan hanya memuat keputusan/langkah berikutnya yang klien ucapkan. Jika tidak ada, tulis tepat: "Belum ada keputusan dari klien."
+Larangan: langkah lanjut/jadwal, "kedua pihak sepakat", penilaian klien yang tidak diucapkan, ucapan terima kasih dianggap persetujuan.
 """)
 
 def key_points_prompt():
@@ -118,19 +102,16 @@ COMMON_RULES +
 
 <transkripsi>{transcript}</transkripsi>
 
-Format: setiap baris diawali '- '. Maksimal 10 poin. Cakup hanya topik yang benar-benar dibahas: kebutuhan/pain point (hanya jika diucapkan klien), sumber data, kewenangan & budget, timeline, dan keunggulan produk. Topik yang tidak dibahas atau jawabannya tidak jelas, lewati atau tulis "belum jelas". Jangan menyimpulkan klasifikasi akuntansi/keuangan yang tidak diucapkan.
-Susun poin mengikuti checklist berikut, dalam urutan ini. Lewati item yang tidak dibahas, dan jangan menulis nama item di output:
-1. Motivasi atau kebutuhan yang diucapkan klien sendiri.
-2. Kondisi klien yang klien sebutkan (mis. aset, tagihan, rencana), ditulis "Klien menyebut ...".
-3. Apa yang ditawarkan penjual dan cara kerjanya (satu poin).
-4. SEMUA angka finansial dari penjual dalam satu atau dua poin, persis seperti diucapkan.
-5. Setiap pertanyaan klien sebagai satu poin berawalan "Klien bertanya ..." diikuti jawaban penjual.
-6. Ketersediaan, kapasitas, dan timeline. Pertahankan cakupan angka persis seperti diucapkan, jangan diperluas ke kelompok yang lebih besar.
-7. Fitur tambahan dan layanan (gabungkan menjadi satu poin).
-8. Kewenangan dan anggaran klien, hanya jika dibahas.
-Gabungkan poin yang tumpang tindih. Maksimal 10 poin.
-Kebutuhan klien hanya ditulis jika klien yang mengucapkannya; hal yang disebut penjual tulis "penjual menyebut ...". Jika klien tidak menyatakan kebutuhan, jangan membuat poin tentang kebutuhan klien dan jangan menulis "belum menyampaikan kebutuhan".
-DILARANG membuat poin tentang pengiriman materi, penyusunan dokumen, jadwal, atau pertemuan lanjutan; itu hanya untuk Action Items. Satu topik per poin; jangan menggabungkan dua topik berbeda (mis. keputusan dan timeline) dalam satu poin. Tulis peran klien persis seperti diucapkan. Semua angka kunci finansial yang disebut penjual (harga paket, deposit, durasi program, payback) wajib masuk dalam satu atau dua poin, ditulis persis seperti diucapkan. Jika poin melebihi 10, gabungkan poin non-keuangan yang sejenis (mis. portal dan panel tambahan). Pertahankan cakupan angka persis seperti diucapkan: jangan memperluas angka ke kelompok yang lebih besar. Informasi yang klien sebutkan tentang kondisinya tulis sebagai poin "Klien menyebut ...".
+Format: setiap baris diawali '- ', maksimal 10 poin, satu topik per poin. Urutan (lewati yang tidak dibahas, jangan tulis nama item):
+1. Kebutuhan yang diucapkan klien.
+2. Kondisi yang klien sebutkan ("Klien menyebut ...").
+3. Yang ditawarkan penjual dan cara kerjanya (satu poin).
+4. Semua angka finansial penjual (harga, deposit, durasi, payback) dalam 1-2 poin, persis seperti diucapkan.
+5. Tiap pertanyaan klien: "Klien bertanya ..." + jawaban penjual.
+6. Ketersediaan, kapasitas, timeline (cakupan angka tidak diperluas).
+7. Fitur tambahan dan layanan (satu poin).
+8. Kewenangan dan anggaran klien, jika dibahas.
+Dilarang membuat poin tentang pengiriman materi, dokumen, jadwal, atau pertemuan lanjutan (itu untuk Action Items).
 """)
 
 def action_items_prompt():
@@ -140,10 +121,15 @@ Anda adalah AI yang ahli dalam menganalisis percakapan dan mengidentifikasi poin
 COMMON_RULES + 
 """
 <konteks>{context}</konteks>
-        
+
 <transkripsi>{transcript}</transkripsi>
-Action item hanya berisi pekerjaan konkret di masa depan yang disebut akan dilakukan seseorang (mengirim dokumen, mengirim ringkasan, mengirim opsi jadwal, menyiapkan demo). Jangan masukkan keinginan atau preferensi, kondisi atau keputusan yang bukan tugas. Hanya tulis tindakan yang diucapkan eksplisit oleh pelaku atau diterima eksplisit oleh pihak lain. Jangan menambah tindakan baru yang tidak ada kalimatnya di transkrip. Komitmen klien hanya ditulis jika klien sendiri yang mengucapkan akan melakukannya. Kalimat penjual yang mengajak klien adalah ajakan atau komitmen PENJUAL, bukan komitmen klien. Tulis pelaku dengan nama dari <konteks>. Pelaku harus satu orang atau pihak spesifik, dilarang menulis "Kedua pihak". Jika klien belum memutuskan untuk melanjutkan, action item hanya berisi komitmen yang benar-benar diucapkan (mis. klien berbicara dengan pihak internal lalu menghubungi kembali). Jangan menulis dimulainya proyek, onboarding, wawancara, atau workshop. Permintaan dokumen yang bergantung pada dimulainya proyek bukan action item. Perhatikan arah kalimat: jika penjual berkata "tim kami akan menghubungi Anda", pelakunya adalah tim penjual dan penerimanya klien. Jika penjual menyebut akan menyiapkan demo atau materi khusus untuk pertemuan berikutnya, tulis sebagai action item penjual.
-Format: setiap baris diawali '- ' dengan pola "[Pelaku] akan [tindakan]". Jika tidak ada tindakan, tulis "- Tidak ada".
+
+Action item = pekerjaan konkret di masa depan yang pelakunya sendiri ucapkan akan dilakukan (mengirim dokumen/ringkasan/opsi jadwal, menyiapkan demo, menghubungi kembali) atau yang diterima eksplisit pihak lain.
+- Bukan action item: keinginan, preferensi, kondisi, penawaran bersyarat, dimulainya proyek/onboarding/workshop.
+- Komitmen klien hanya jika klien sendiri yang mengucapkan. Ajakan penjual kepada klien adalah komitmen penjual.
+- Perhatikan arah: "tim kami akan menghubungi Anda" berarti pelakunya tim penjual.
+- Pelaku satu pihak spesifik (nama dari <konteks>), jangan "Kedua pihak".
+Format: tiap baris '- [Pelaku] akan [tindakan]'. Jika tidak ada, tulis "- Tidak ada".
 """)
 
 REDUCE_INSTRUCTIONS = {
