@@ -1,0 +1,43 @@
+services:
+  ai-service-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-service-app
+    restart: unless-stopped
+    user: "10001:10001"
+    expose:
+      - "5000"
+    ports:
+      - "5002:5000" # Direct port mapping jika ingin akses langsung tanpa gateway
+    env_file:
+      - .env
+    environment:
+      - PORT=5000
+      - PYTHONUNBUFFERED=1
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-2}
+      - GUNICORN_THREADS=${GUNICORN_THREADS:-4}
+      - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-300}
+    volumes:
+      - ./temp_audio:/app/temp_audio
+      - ./log:/app/log
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/healthz || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+    networks:
+      - shared-gateway
+
+networks:
+  shared-gateway:
+    external: true

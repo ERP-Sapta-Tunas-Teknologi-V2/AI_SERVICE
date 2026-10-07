@@ -21,11 +21,14 @@ load_dotenv()
 
 SAMPLE_RATE = 16000
 
+hf_token = os.getenv("HUGGINGFACE_TOKEN")
 pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-community-1",
-    token=os.getenv("HUGGINGFACE_TOKEN"),
+    token=hf_token,
 )
-pipeline.to(torch.device("cuda"))  # ganti "cpu" jika VRAM 6GB kepenuhan (bersaing dengan whisper & ollama)
+diarize_device = os.getenv("DIARIZE_DEVICE", "cuda" if torch.cuda.is_available() else "cpu")
+pipeline.to(torch.device(diarize_device))  # ganti "cpu" jika VRAM 6GB kepenuhan (bersaing dengan whisper & ollama)
+print(f"[INIT] Pyannote pipeline loaded on device: {diarize_device}")
 print("after:", torch.backends.cuda.matmul.allow_tf32, torch.backends.cudnn.allow_tf32)
 
 def diarize(filepath):

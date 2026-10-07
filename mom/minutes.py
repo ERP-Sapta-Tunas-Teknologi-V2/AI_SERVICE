@@ -1,3 +1,4 @@
+import os
 import re
 import time
 import math
@@ -6,11 +7,20 @@ from langchain_core.prompts import ChatPromptTemplate
 from transformers import AutoTokenizer
 from .logging import log_time, log_model
 
-MAX_TOKEN = 5000
-USE_FACTS = False
+MAX_TOKEN = int(os.getenv("MOM_MAX_TOKEN", "5000"))
+USE_FACTS = os.getenv("USE_FACTS", "false").lower() in ("true", "1", "yes")
 
-llm = ChatOllama(model="qwen3.5:9b", temperature=0, num_ctx=12288, reasoning=False)
-tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3.5-9B")  # hanya tokenizer yang di-download, bukan model
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3.5:9b")
+
+llm = ChatOllama(
+    base_url=OLLAMA_BASE_URL,
+    model=OLLAMA_MODEL,
+    temperature=0,
+    num_ctx=int(os.getenv("OLLAMA_NUM_CTX", "12288")),
+    reasoning=False
+)
+tokenizer = AutoTokenizer.from_pretrained(os.getenv("TOKENIZER_MODEL", "Qwen/Qwen3.5-9B"))  # hanya tokenizer yang di-download, bukan model
 
 def count_tokens(text):
     return len(tokenizer.encode(text, add_special_tokens=False))
