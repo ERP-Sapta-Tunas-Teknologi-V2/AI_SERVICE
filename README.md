@@ -145,10 +145,18 @@ Semua command berikut dijalankan dari folder `AI_SERVICE/`.
 python -m venv .venv
 ```
 
-Aktifkan virtual environment. Jika di PowerShell:
+Aktifkan virtual environment. 
+
+Di Windows:
 
 ```powershell
 .venv\Scripts\Activate.ps1
+```
+
+Di Linux :
+
+```powershell
+source .venv/bin/activate
 ```
 
 Jika berhasil, terminal akan menunjukkan `(.venv)`.

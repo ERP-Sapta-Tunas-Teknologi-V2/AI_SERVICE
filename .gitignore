@@ -3,3 +3,4 @@
 *.log
 *.ipynb
 .env
+/temp_audio
